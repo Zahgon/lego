@@ -12,35 +12,20 @@ func init() {
 	defaultClient.Store(NewClient(nil))
 }
 
-func DefaultClient() *Client { return defaultClient.Load() }
+func DefaultClient() *Client { _ = "STUB: not implemented"; return nil }
 
-func SetDefaultClient(c *Client) {
-	defaultClient.Store(c)
-}
+func SetDefaultClient(c *Client) { _ = "STUB: not implemented"; return }
 
 type Options = internal.Options
 
-func NewOptions() *Options {
-	return internal.NewOptions()
-}
+func NewOptions() *Options { _ = "STUB: not implemented"; return nil }
 
 type Client struct {
 	core *internal.Client
 
-	// authoritativeNSPort used by authoritative NS.
-	// For testing purposes only.
 	authoritativeNSPort string
 }
 
-func NewClient(opts *Options) *Client {
-	return &Client{
-		core: internal.NewClient(opts),
+func NewClient(opts *Options) *Client { _ = "STUB: not implemented"; return nil }
 
-		authoritativeNSPort: "53",
-	}
-}
-
-// ClearFqdnCache clears the cache of fqdn to zone mappings. Primarily used in testing.
-func (c *Client) ClearFqdnCache() {
-	c.core.ClearFqdnCache()
-}
+func (c *Client) ClearFqdnCache() { _ = "STUB: not implemented"; return }

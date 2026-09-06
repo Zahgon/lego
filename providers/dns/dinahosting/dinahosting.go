@@ -1,21 +1,14 @@
-// Package dinahosting implements a DNS provider for solving the DNS-01 challenge using Dinahosting.
 package dinahosting
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/dinahosting/internal"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "DINAHOSTING_"
 
@@ -30,7 +23,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	Username string
 	Password string
@@ -41,119 +33,31 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *internal.Client
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for Dinahosting.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvUsername, EnvPassword)
-	if err != nil {
-		return nil, fmt.Errorf("dinahosting: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.Username = values[EnvUsername]
-	config.Password = values[EnvPassword]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for Dinahosting.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("dinahosting: the configuration of the DNS provider is nil")
-	}
-
-	client, err := internal.NewClient(config.Username, config.Password)
-	if err != nil {
-		return nil, fmt.Errorf("dinahosting: %w", err)
-	}
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	return &DNSProvider{
-		config: config,
-		client: client,
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Present creates a TXT record using the specified parameters.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("dinahosting: could not find zone for domain %q: %w", domain, err)
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(info.EffectiveFQDN, authZone)
-	if err != nil {
-		return fmt.Errorf("dinahosting: %w", err)
-	}
-
-	record := internal.TXTRecord{
-		Domain:   dns01.UnFqdn(authZone),
-		Hostname: subDomain,
-		Value:    info.Value,
-	}
-
-	err = d.client.AddTXTRecord(ctx, record)
-	if err != nil {
-		return fmt.Errorf("dinahosting: add TXT record: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("dinahosting: could not find zone for domain %q: %w", domain, err)
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(info.EffectiveFQDN, authZone)
-	if err != nil {
-		return fmt.Errorf("dinahosting: %w", err)
-	}
-
-	record := internal.TXTRecord{
-		Domain:   dns01.UnFqdn(authZone),
-		Hostname: subDomain,
-		Value:    info.Value,
-	}
-
-	err = d.client.DeleteTXTRecord(ctx, record)
-	if err != nil {
-		return fmt.Errorf("dinahosting: delete TXT record: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }

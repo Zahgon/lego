@@ -1,21 +1,14 @@
-// Package azuredns implements a DNS provider for solving the DNS-01 challenge using azure DNS.
-// Azure doesn't like trailing dots on domain names, most of the acme code does.
 package azuredns
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/platform/env"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "AZURE_"
 
@@ -57,7 +50,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	ZoneName string
 
@@ -67,7 +59,6 @@ type Config struct {
 
 	Environment cloud.Configuration
 
-	// optional if using default Azure credentials
 	ClientID     string
 	ClientSecret string
 	TenantID     string
@@ -91,123 +82,30 @@ type Config struct {
 	ServiceDiscoveryFilter string
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		ZoneName:           env.GetOrFile(EnvZoneName),
-		TTL:                env.GetOrDefaultInt(EnvTTL, 60),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 2*time.Second),
-		Environment:        cloud.AzurePublic,
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	provider challenge.ProviderTimeout
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for azuredns.
-func NewDNSProvider() (*DNSProvider, error) {
-	config := NewDefaultConfig()
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	environmentName := env.GetOrFile(EnvEnvironment)
-	if environmentName != "" {
-		switch environmentName {
-		case "china":
-			config.Environment = cloud.AzureChina
-		case "public":
-			config.Environment = cloud.AzurePublic
-		case "usgovernment":
-			config.Environment = cloud.AzureGovernment
-		default:
-			return nil, fmt.Errorf("azuredns: unknown environment %s", environmentName)
-		}
-	} else {
-		config.Environment = cloud.AzurePublic
-	}
-
-	config.SubscriptionID = env.GetOrFile(EnvSubscriptionID)
-	config.ResourceGroup = env.GetOrFile(EnvResourceGroup)
-	config.PrivateZone = env.GetOrDefaultBool(EnvPrivateZone, false)
-
-	config.ClientID = env.GetOrFile(EnvClientID)
-	config.ClientSecret = env.GetOrFile(EnvClientSecret)
-	config.TenantID = env.GetOrFile(EnvTenantID)
-
-	config.OIDCToken = env.GetOrFile(EnvOIDCToken)
-	config.OIDCTokenFilePath = env.GetOrFile(EnvOIDCTokenFilePath)
-
-	config.ServiceDiscoveryFilter = env.GetOrFile(EnvServiceDiscoveryFilter)
-
-	oidcValues, _ := env.GetWithFallback(
-		[]string{EnvOIDCRequestURL, EnvGitHubOIDCRequestURL, altEnvArmOIDCRequestURL},
-		[]string{EnvOIDCRequestToken, EnvGitHubOIDCRequestToken, altEnvArmOIDCRequestToken},
-	)
-
-	config.OIDCRequestURL = oidcValues[EnvOIDCRequestURL]
-	config.OIDCRequestToken = oidcValues[EnvOIDCRequestToken]
-
-	// https://registry.terraform.io/providers/hashicorp/Azurerm/latest/docs/guides/service_principal_oidc
-	pipelineValues, _ := env.GetWithFallback(
-		[]string{EnvServiceConnectionID, altEnvServiceConnectionID, altEnvArmAdoPipelineServiceConnectionID, altEnvArmOIDCAzureServiceConnectionID},
-		[]string{EnvSystemAccessToken, altEnvArmOIDCRequestToken, altEnvSystemAccessToken},
-	)
-
-	config.ServiceConnectionID = pipelineValues[EnvServiceConnectionID]
-	config.SystemAccessToken = pipelineValues[EnvSystemAccessToken]
-
-	config.AuthMethod = env.GetOrFile(EnvAuthMethod)
-	config.AuthMSITimeout = env.GetOrDefaultSecond(EnvAuthMSITimeout, 2*time.Second)
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for Azure.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("azuredns: the configuration of the DNS provider is nil")
-	}
-
-	if config.HTTPClient == nil {
-		config.HTTPClient = &http.Client{Timeout: 5 * time.Second}
-	}
-
-	config.HTTPClient = clientdebug.Wrap(config.HTTPClient)
-
-	credentials, err := getCredentials(config)
-	if err != nil {
-		return nil, fmt.Errorf("azuredns: Unable to retrieve valid credentials: %w", err)
-	}
-
-	var dnsProvider challenge.ProviderTimeout
-	if config.PrivateZone {
-		dnsProvider, err = NewDNSProviderPrivate(config, credentials)
-		if err != nil {
-			return nil, fmt.Errorf("azuredns: %w", err)
-		}
-	} else {
-		dnsProvider, err = NewDNSProviderPublic(config, credentials)
-		if err != nil {
-			return nil, fmt.Errorf("azuredns: %w", err)
-		}
-	}
-
-	return &DNSProvider{provider: dnsProvider}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.provider.Timeout()
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	return d.provider.Present(ctx, domain, token, keyAuth)
+	_ = "STUB: not implemented"
+	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	return d.provider.CleanUp(ctx, domain, token, keyAuth)
+	_ = "STUB: not implemented"
+	return nil
 }

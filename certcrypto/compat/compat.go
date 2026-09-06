@@ -1,4 +1,3 @@
-// Package compat provides compatibility with lego/v4.
 package compat
 
 import (
@@ -16,34 +15,4 @@ const (
 
 type KeyTypeCompat certcrypto.KeyType
 
-func (k *KeyTypeCompat) UnmarshalText(text []byte) error {
-	switch string(text) {
-	case `P256`:
-		// Compatibility with versions before lego/v5.
-		*k = EC256
-	case `P384`:
-		// Compatibility with versions before lego/v5.
-		*k = EC384
-	case `2048`:
-		// Compatibility with versions before lego/v5.
-		*k = RSA2048
-	case `3072`:
-		// Compatibility with versions before lego/v5.
-		*k = RSA3072
-	case `4096`:
-		// Compatibility with versions before lego/v5.
-		*k = RSA4096
-	case `8192`:
-		// Compatibility with versions before lego/v5.
-		*k = RSA8192
-	default:
-		kt, err := certcrypto.ToKeyType(string(text))
-		if err != nil {
-			return err
-		}
-
-		*k = KeyTypeCompat(kt)
-	}
-
-	return nil
-}
+func (k *KeyTypeCompat) UnmarshalText(text []byte) error { _ = "STUB: not implemented"; return nil }

@@ -1,20 +1,13 @@
-// Package httpnet implements a DNS provider for solving the DNS-01 challenge using http.net.
 package httpnet
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/internal/hostingde"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "HTTPNET_"
 
@@ -31,78 +24,32 @@ const defaultBaseURL = "https://partner.http.net/api/dns/v1/json"
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config = hostingde.Config
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		ZoneName:           env.GetOrFile(EnvZoneName),
-		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	prv challenge.ProviderTimeout
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for http.net.
-// Credentials must be passed in the environment variables:
-// HTTPNET_ZONE_NAME and HTTPNET_API_KEY.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvAPIKey)
-	if err != nil {
-		return nil, fmt.Errorf("httpnet: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.APIKey = values[EnvAPIKey]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for http.net.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("httpnet: the configuration of the DNS provider is nil")
-	}
-
-	provider, err := hostingde.NewDNSProviderConfig(config, defaultBaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("httpnet: %w", err)
-	}
-
-	return &DNSProvider{prv: provider}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Present creates a TXT record using the specified parameters.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	err := d.prv.Present(ctx, domain, token, keyAuth)
-	if err != nil {
-		return fmt.Errorf("httpnet: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	err := d.prv.CleanUp(ctx, domain, token, keyAuth)
-	if err != nil {
-		return fmt.Errorf("httpnet: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.prv.Timeout()
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }

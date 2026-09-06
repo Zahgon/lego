@@ -1,22 +1,14 @@
-// Package efficientip implements a DNS provider for solving the DNS-01 challenge using Efficient IP.
 package efficientip
 
 import (
 	"context"
-	"crypto/tls"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/efficientip/internal"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "EFFICIENTIP_"
 
@@ -34,7 +26,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	Username           string
 	Password           string
@@ -47,121 +38,31 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *internal.Client
 }
 
-// NewDNSProvider returns a new DNS provider
-// using environment variable EFFICIENTIP_API_KEY for adding and removing the DNS record.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvUsername, EnvPassword, EnvHostname, EnvDNSName)
-	if err != nil {
-		return nil, fmt.Errorf("efficientip: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.Username = values[EnvUsername]
-	config.Password = values[EnvPassword]
-	config.Hostname = values[EnvHostname]
-	config.DNSName = values[EnvDNSName]
-	config.ViewName = env.GetOrDefaultString(EnvViewName, "")
-	config.InsecureSkipVerify = env.GetOrDefaultBool(EnvInsecureSkipVerify, false)
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for Efficient IP.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("efficientip: the configuration of the DNS provider is nil")
-	}
-
-	if config.Username == "" {
-		return nil, errors.New("efficientip: missing username")
-	}
-
-	if config.Password == "" {
-		return nil, errors.New("efficientip: missing password")
-	}
-
-	if config.Hostname == "" {
-		return nil, errors.New("efficientip: missing hostname")
-	}
-
-	if config.DNSName == "" {
-		return nil, errors.New("efficientip: missing dnsname")
-	}
-
-	client := internal.NewClient(config.Hostname, config.Username, config.Password)
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	if config.InsecureSkipVerify {
-		client.HTTPClient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	return &DNSProvider{config: config, client: client}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (d *DNSProvider) Present(ctx context.Context, domain, _, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	r := internal.ResourceRecord{
-		RRName:      dns01.UnFqdn(info.EffectiveFQDN),
-		RRType:      "TXT",
-		Value1:      info.Value,
-		DNSName:     d.config.DNSName,
-		DNSViewName: d.config.ViewName,
-	}
-
-	_, err := d.client.AddRecord(ctx, r)
-	if err != nil {
-		return fmt.Errorf("efficientip: add record: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, _, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	params := internal.DeleteInputParameters{
-		RRName:      dns01.UnFqdn(info.EffectiveFQDN),
-		RRType:      "TXT",
-		RRValue1:    info.Value,
-		DNSName:     d.config.DNSName,
-		DNSViewName: d.config.ViewName,
-	}
-
-	_, err := d.client.DeleteRecord(ctx, params)
-	if err != nil {
-		return fmt.Errorf("efficientip: delete record: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }

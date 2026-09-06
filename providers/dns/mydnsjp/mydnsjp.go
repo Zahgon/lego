@@ -1,21 +1,14 @@
-// Package mydnsjp implements a DNS provider for solving the DNS-01 challenge using MyDNS.jp.
 package mydnsjp
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 	"github.com/go-acme/lego/v5/providers/dns/mydnsjp/internal"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "MYDNSJP_"
 
@@ -29,7 +22,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	MasterID           string
 	Password           string
@@ -38,90 +30,31 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *internal.Client
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for MyDNS.jp.
-// Credentials must be passed in the environment variables: MYDNSJP_MASTER_ID and MYDNSJP_PASSWORD.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvMasterID, EnvPassword)
-	if err != nil {
-		return nil, fmt.Errorf("mydnsjp: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.MasterID = values[EnvMasterID]
-	config.Password = values[EnvPassword]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for MyDNS.jp.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("mydnsjp: the configuration of the DNS provider is nil")
-	}
-
-	if config.MasterID == "" || config.Password == "" {
-		return nil, errors.New("mydnsjp: some credentials information are missing")
-	}
-
-	client := internal.NewClient(config.MasterID, config.Password)
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	return &DNSProvider{
-		config: config,
-		client: client,
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	// TODO(ldez) replace domain by FQDN to follow CNAME.
-	err := d.client.AddTXTRecord(ctx, domain, info.Value)
-	if err != nil {
-		return fmt.Errorf("mydnsjp: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	// TODO(ldez) replace domain by FQDN to follow CNAME.
-	err := d.client.DeleteTXTRecord(ctx, domain, info.Value)
-	if err != nil {
-		return fmt.Errorf("mydnsjp: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }

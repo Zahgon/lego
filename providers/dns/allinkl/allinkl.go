@@ -1,24 +1,15 @@
-// Package allinkl implements a DNS provider for solving the DNS-01 challenge using all-inkl.
 package allinkl
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/log"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/allinkl/internal"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "ALL_INKL_"
 
@@ -32,7 +23,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	Login              string
 	Password           string
@@ -42,18 +32,8 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 
@@ -64,143 +44,29 @@ type DNSProvider struct {
 	recordIDsMu sync.Mutex
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for all-inkl.
-// Credentials must be passed in the environment variable: ALL_INKL_LOGIN, ALL_INKL_PASSWORD.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvLogin, EnvPassword)
-	if err != nil {
-		return nil, fmt.Errorf("allinkl: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.Login = values[EnvLogin]
-	config.Password = values[EnvPassword]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for all-inkl.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("allinkl: the configuration of the DNS provider is nil")
-	}
-
-	if config.Login == "" || config.Password == "" {
-		return nil, errors.New("allinkl: missing credentials")
-	}
-
-	identifier := internal.NewIdentifier(config.Login, config.Password)
-
-	if config.HTTPClient != nil {
-		identifier.HTTPClient = config.HTTPClient
-	}
-
-	identifier.HTTPClient = clientdebug.Wrap(identifier.HTTPClient)
-
-	client := internal.NewClient(config.Login)
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	return &DNSProvider{
-		config:     config,
-		identifier: identifier,
-		client:     client,
-		recordIDs:  make(map[string]string),
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record using the specified parameters.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	credential, err := d.identifier.Authentication(ctx, 60, true)
-	if err != nil {
-		return fmt.Errorf("allinkl: authentication: %w", err)
-	}
-
-	ctxAuth := internal.WithContext(ctx, credential)
-
-	authZone, err := d.findZone(ctxAuth, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("allinkl: %w", err)
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(info.EffectiveFQDN, authZone)
-	if err != nil {
-		return fmt.Errorf("allinkl: %w", err)
-	}
-
-	record := internal.DNSRequest{
-		ZoneHost:   authZone,
-		RecordType: "TXT",
-		RecordName: subDomain,
-		RecordData: info.Value,
-	}
-
-	recordID, err := d.client.AddDNSSettings(ctxAuth, record)
-	if err != nil {
-		return fmt.Errorf("allinkl: add DNS settings: %w", err)
-	}
-
-	d.recordIDsMu.Lock()
-	d.recordIDs[token] = recordID
-	d.recordIDsMu.Unlock()
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	credential, err := d.identifier.Authentication(ctx, 60, true)
-	if err != nil {
-		return fmt.Errorf("allinkl: authentication: %w", err)
-	}
-
-	ctxAuth := internal.WithContext(ctx, credential)
-
-	// gets the record's unique ID from when we created it
-	d.recordIDsMu.Lock()
-	recordID, ok := d.recordIDs[token]
-	d.recordIDsMu.Unlock()
-
-	if !ok {
-		return fmt.Errorf("allinkl: unknown record ID for '%s' '%s'", info.EffectiveFQDN, token)
-	}
-
-	_, err = d.client.DeleteDNSSettings(ctxAuth, recordID)
-	if err != nil {
-		return fmt.Errorf("allinkl: delete DNS settings: %w", err)
-	}
-
-	d.recordIDsMu.Lock()
-	delete(d.recordIDs, token)
-	d.recordIDsMu.Unlock()
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (d *DNSProvider) findZone(ctx context.Context, fqdn string) (string, error) {
-	for z := range dns01.DomainsSeq(fqdn) {
-		_, errG := d.client.GetDNSSettings(ctx, z, "")
-		if errG != nil {
-			log.Debug("get DNS settings zone", slog.String("zone", z), log.ErrorAttr(errG))
-			continue
-		}
-
-		return z, nil
-	}
-
-	return "", fmt.Errorf("unable to find auth zone for '%s'", fqdn)
+	_ = "STUB: not implemented"
+	return "", nil
 }

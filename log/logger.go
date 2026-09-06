@@ -1,7 +1,6 @@
 package log
 
 import (
-	"context"
 	"log/slog"
 	"os"
 	"sync/atomic"
@@ -13,37 +12,16 @@ func init() {
 	defaultLogger.Store(slog.New(slog.NewTextHandler(os.Stdout, nil)))
 }
 
-// Default returns the default [Logger].
-func Default() *slog.Logger { return defaultLogger.Load() }
+func Default() *slog.Logger { _ = "STUB: not implemented"; return nil }
 
-// SetDefault makes l the default [Logger], which is used by
-// the top-level functions [Info], [Debug] and so on.
-func SetDefault(l *slog.Logger) {
-	defaultLogger.Store(l)
-}
+func SetDefault(l *slog.Logger) { _ = "STUB: not implemented"; return }
 
-// Fatal calls [Logger.Error] on the default logger and exit with code 1.
-func Fatal(msg string, args ...slog.Attr) {
-	Error(msg, args...)
-	os.Exit(1)
-}
+func Fatal(msg string, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
-// Debug calls [Logger.Debug] on the default logger.
-func Debug(msg string, args ...slog.Attr) {
-	Default().LogAttrs(context.Background(), slog.LevelDebug, msg, args...)
-}
+func Debug(msg string, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
-// Info calls [Logger.Info] on the default logger.
-func Info(msg string, args ...slog.Attr) {
-	Default().LogAttrs(context.Background(), slog.LevelInfo, msg, args...)
-}
+func Info(msg string, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
-// Warn calls [Logger.Warn] on the default logger.
-func Warn(msg string, args ...slog.Attr) {
-	Default().LogAttrs(context.Background(), slog.LevelWarn, msg, args...)
-}
+func Warn(msg string, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
-// Error calls [Logger.Error] on the default logger.
-func Error(msg string, args ...slog.Attr) {
-	Default().LogAttrs(context.Background(), slog.LevelError, msg, args...)
-}
+func Error(msg string, args ...slog.Attr) { _ = "STUB: not implemented"; return }

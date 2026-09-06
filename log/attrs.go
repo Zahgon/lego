@@ -2,26 +2,18 @@ package log
 
 import (
 	"log/slog"
-	"strings"
 	"time"
 )
 
-func ErrorAttr(err error) slog.Attr {
-	return slog.Any("error", err)
-}
+func ErrorAttr(err error) slog.Attr { _ = "STUB: not implemented"; return *new(slog.Attr) }
 
-func DomainAttr(v string) slog.Attr {
-	return slog.String("domain", v)
-}
+func DomainAttr(v string) slog.Attr { _ = "STUB: not implemented"; return *new(slog.Attr) }
 
-func DomainsAttr(v []string) slog.Attr {
-	return slog.String("domains", strings.Join(v, ", "))
-}
+func DomainsAttr(v []string) slog.Attr { _ = "STUB: not implemented"; return *new(slog.Attr) }
 
-func CertNameAttr(v string) slog.Attr {
-	return slog.String("cert-name", v)
-}
+func CertNameAttr(v string) slog.Attr { _ = "STUB: not implemented"; return *new(slog.Attr) }
 
 func DurationAttr(key string, v time.Duration) slog.Attr {
-	return slog.Any(key, FormattableDuration(v))
+	_ = "STUB: not implemented"
+	return *new(slog.Attr)
 }

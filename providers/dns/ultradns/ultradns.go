@@ -1,23 +1,13 @@
-// Package ultradns implements a DNS provider for solving the DNS-01 challenge using ultradns.
 package ultradns
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/internal/useragent"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/ultradns/ultradns-go-sdk/pkg/client"
-	"github.com/ultradns/ultradns-go-sdk/pkg/record"
-	"github.com/ultradns/ultradns-go-sdk/pkg/rrset"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "ULTRADNS_"
 
@@ -34,13 +24,11 @@ const defaultEndpoint = "https://api.ultradns.com/"
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *client.Client
 }
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	Username string
 	Password string
@@ -51,124 +39,26 @@ type Config struct {
 	PollingInterval    time.Duration
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		Endpoint:           env.GetOrDefaultString(EnvEndpoint, defaultEndpoint),
-		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, 4*time.Second),
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// NewDNSProvider returns a DNSProvider instance configured for ultradns.
-// Credentials must be passed in the environment variables:
-// ULTRADNS_USERNAME and ULTRADNS_PASSWORD.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvUsername, EnvPassword)
-	if err != nil {
-		return nil, fmt.Errorf("ultradns: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.Username = values[EnvUsername]
-	config.Password = values[EnvPassword]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for ultradns.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("ultradns: the configuration of the DNS provider is nil")
-	}
-
-	ultraConfig := client.Config{
-		Username:  config.Username,
-		Password:  config.Password,
-		HostURL:   config.Endpoint,
-		UserAgent: useragent.Get(),
-	}
-
-	uClient, err := client.NewClient(ultraConfig)
-	if err != nil {
-		return nil, fmt.Errorf("ultradns: %w", err)
-	}
-
-	return &DNSProvider{config: config, client: uClient}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record using the specified parameters.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("ultradns: could not find zone for domain %q: %w", domain, err)
-	}
-
-	recordService, err := record.Get(d.client)
-	if err != nil {
-		return fmt.Errorf("ultradns: %w", err)
-	}
-
-	rrSetKeyData := &rrset.RRSetKey{
-		Owner:      info.EffectiveFQDN,
-		Zone:       authZone,
-		RecordType: "TXT",
-	}
-
-	resp, _, _ := recordService.Read(rrSetKeyData)
-
-	rrSetData := &rrset.RRSet{
-		OwnerName: info.EffectiveFQDN,
-		TTL:       d.config.TTL,
-		RRType:    "TXT",
-		RData:     []string{info.Value},
-	}
-
-	if resp != nil && resp.StatusCode == http.StatusOK {
-		_, err = recordService.Update(rrSetKeyData, rrSetData)
-	} else {
-		_, err = recordService.Create(rrSetKeyData, rrSetData)
-	}
-
-	if err != nil {
-		return fmt.Errorf("ultradns: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("ultradns: could not find zone for domain %q: %w", domain, err)
-	}
-
-	recordService, err := record.Get(d.client)
-	if err != nil {
-		return fmt.Errorf("ultradns: %w", err)
-	}
-
-	rrSetKeyData := &rrset.RRSetKey{
-		Owner:      info.EffectiveFQDN,
-		Zone:       authZone,
-		RecordType: "TXT",
-	}
-
-	_, err = recordService.Delete(rrSetKeyData)
-	if err != nil {
-		return fmt.Errorf("ultradns: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }

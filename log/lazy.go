@@ -1,7 +1,6 @@
 package log
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 )
@@ -12,40 +11,21 @@ type LazyMessage struct {
 }
 
 func LazySprintf(msg string, args ...any) LazyMessage {
-	return LazyMessage{
-		msg:  msg,
-		args: args,
-	}
+	_ = "STUB: not implemented"
+	return *new(LazyMessage)
 }
 
-func (l LazyMessage) String() string {
-	return fmt.Sprintf(l.msg, l.args...)
-}
+func (l LazyMessage) String() string { _ = "STUB: not implemented"; return "" }
 
-// Debugf calls [Logger.Debug] on the default logger.
-func Debugf(msg fmt.Stringer, args ...slog.Attr) {
-	logLazy(slog.LevelDebug, msg, args...)
-}
+func Debugf(msg fmt.Stringer, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
-// Infof calls [Logger.Info] on the default logger.
-func Infof(msg fmt.Stringer, args ...slog.Attr) {
-	logLazy(slog.LevelInfo, msg, args...)
-}
+func Infof(msg fmt.Stringer, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
-// Warnf calls [Logger.Warn] on the default logger.
-func Warnf(msg fmt.Stringer, args ...slog.Attr) {
-	logLazy(slog.LevelWarn, msg, args...)
-}
+func Warnf(msg fmt.Stringer, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
-// Errorf calls [Logger.Error] on the default logger.
-func Errorf(msg fmt.Stringer, args ...slog.Attr) {
-	logLazy(slog.LevelError, msg, args...)
-}
+func Errorf(msg fmt.Stringer, args ...slog.Attr) { _ = "STUB: not implemented"; return }
 
 func logLazy(level slog.Level, msg fmt.Stringer, args ...slog.Attr) {
-	ctx := context.Background()
-
-	if Default().Enabled(ctx, level) {
-		Default().LogAttrs(ctx, level, msg.String(), args...)
-	}
+	_ = "STUB: not implemented"
+	return
 }

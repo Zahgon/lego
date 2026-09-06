@@ -3,11 +3,7 @@ package namecheap
 import (
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
-
-	"github.com/go-acme/lego/v5/platform/env"
-	"golang.org/x/net/http/httpproxy"
 )
 
 const (
@@ -20,52 +16,27 @@ const (
 	envRequestMethod   = "REQUEST_METHOD"
 )
 
-// Allows lazy loading of the proxy.
 var (
 	envProxyOnce      sync.Once
 	envProxyFuncValue func(*url.URL) (*url.URL, error)
 )
 
 func defaultTransport(namespace string) http.RoundTripper {
-	tr, ok := http.DefaultTransport.(*http.Transport)
-	if !ok {
-		return nil
-	}
-
-	clone := tr.Clone()
-	clone.Proxy = proxyFromEnvironment(namespace)
-
-	return clone
+	_ = "STUB: not implemented"
+	return *new(http.RoundTripper)
 }
 
-// Inspired by:
-// - https://pkg.go.dev/net/http#ProxyFromEnvironment
-// - https://pkg.go.dev/golang.org/x/net/http/httpproxy#FromEnvironment
 func envProxyFunc(namespace string) func(*url.URL) (*url.URL, error) {
-	envProxyOnce.Do(func() {
-		cfg := &httpproxy.Config{
-			HTTPProxy:  getEnv(namespace, envHTTPProxy, envHTTPProxyLower),
-			HTTPSProxy: getEnv(namespace, envHTTPSProxy, envHTTPSProxyLower),
-			NoProxy:    getEnv(namespace, envNoProxy, envNoProxyLower),
-			CGI:        env.GetOneWithFallback(namespace+envRequestMethod, "", env.ParseString, envRequestMethod) != "",
-		}
-
-		envProxyFuncValue = cfg.ProxyFunc()
-	})
-
-	return envProxyFuncValue
+	_ = "STUB: not implemented"
+	return nil
 }
 
-// Inspired by:
-// - https://pkg.go.dev/net/http#ProxyFromEnvironment
-// - https://pkg.go.dev/golang.org/x/net/http/httpproxy#FromEnvironment
 func proxyFromEnvironment(namespace string) func(req *http.Request) (*url.URL, error) {
-	return func(req *http.Request) (*url.URL, error) {
-		return envProxyFunc(namespace)(req.URL)
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func getEnv(namespace, baseEnvName, baseEnvNameLower string) string {
-	return env.GetOneWithFallback(namespace+baseEnvName, "", env.ParseString,
-		strings.ToLower(namespace)+baseEnvNameLower, baseEnvName, baseEnvNameLower)
+	_ = "STUB: not implemented"
+	return ""
 }

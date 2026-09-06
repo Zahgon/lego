@@ -1,24 +1,14 @@
-// Package nifcloud implements a DNS provider for solving the DNS-01 challenge using NIFCLOUD DNS.
 package nifcloud
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/internal/wait"
-	"github.com/go-acme/lego/v5/platform/env"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 	"github.com/go-acme/lego/v5/providers/dns/nifcloud/internal"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "NIFCLOUD_"
 
@@ -34,7 +24,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	BaseURL            string
 	AccessKey          string
@@ -45,158 +34,36 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	client *internal.Client
 	config *Config
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for the NIFCLOUD DNS service.
-// Credentials must be passed in the environment variables:
-// NIFCLOUD_ACCESS_KEY_ID and NIFCLOUD_SECRET_ACCESS_KEY.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvAccessKeyID, EnvSecretAccessKey)
-	if err != nil {
-		return nil, fmt.Errorf("nifcloud: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.BaseURL = env.GetOrFile(EnvDNSEndpoint)
-	config.AccessKey = values[EnvAccessKeyID]
-	config.SecretKey = values[EnvSecretAccessKey]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for NIFCLOUD.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("nifcloud: the configuration of the DNS provider is nil")
-	}
-
-	client, err := internal.NewClient(config.AccessKey, config.SecretKey)
-	if err != nil {
-		return nil, fmt.Errorf("nifcloud: %w", err)
-	}
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	if config.BaseURL != "" {
-		baseURL, err := url.Parse(config.BaseURL)
-		if err != nil {
-			return nil, fmt.Errorf("nifcloud: %w", err)
-		}
-
-		client.BaseURL = baseURL
-	}
-
-	return &DNSProvider{client: client, config: config}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Present creates a TXT record using the specified parameters.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	err := d.changeRecord(ctx, "CREATE", info.EffectiveFQDN, info.Value, d.config.TTL)
-	if err != nil {
-		return fmt.Errorf("nifcloud: %w", err)
-	}
-
-	return err
+	_ = "STUB: not implemented"
+	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	err := d.changeRecord(ctx, "DELETE", info.EffectiveFQDN, info.Value, d.config.TTL)
-	if err != nil {
-		return fmt.Errorf("nifcloud: %w", err)
-	}
-
-	return err
+	_ = "STUB: not implemented"
+	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
 func (d *DNSProvider) changeRecord(ctx context.Context, action, fqdn, value string, ttl int) error {
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, fqdn)
-	if err != nil {
-		return fmt.Errorf("could not find zone: %w", err)
-	}
-
-	name := dns01.UnFqdn(fqdn)
-	if authZone == fqdn {
-		name = "@"
-	}
-
-	reqParams := internal.ChangeResourceRecordSetsRequest{
-		XMLNs: internal.XMLNs,
-		ChangeBatch: internal.ChangeBatch{
-			Comment: "Managed by Lego",
-			Changes: internal.Changes{
-				Change: []internal.Change{
-					{
-						Action: action,
-						ResourceRecordSet: internal.ResourceRecordSet{
-							Name: name,
-							Type: "TXT",
-							TTL:  ttl,
-							ResourceRecords: internal.ResourceRecords{
-								ResourceRecord: []internal.ResourceRecord{
-									{
-										Value: value,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	resp, err := d.client.ChangeResourceRecordSets(ctx, dns01.UnFqdn(authZone), reqParams)
-	if err != nil {
-		return fmt.Errorf("failed to change record set: %w", err)
-	}
-
-	statusID := resp.ChangeInfo.ID
-
-	return wait.Retry(ctx,
-		func() error {
-			resp, err := d.client.GetChange(ctx, statusID)
-			if err != nil {
-				return fmt.Errorf("get change: %w", err)
-			}
-
-			if resp.ChangeInfo.Status != "INSYNC" {
-				return fmt.Errorf("change status: %s", resp.ChangeInfo.Status)
-			}
-
-			return nil
-		},
-		backoff.WithBackOff(backoff.NewConstantBackOff(4*time.Second)),
-		backoff.WithMaxElapsedTime(120*time.Second),
-	)
+	_ = "STUB: not implemented"
+	return nil
 }

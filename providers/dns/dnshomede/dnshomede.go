@@ -1,21 +1,14 @@
-// Package dnshomede implements a DNS provider for solving the DNS-01 challenge using dnsHome.de.
 package dnshomede
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/dnshomede/internal"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "DNSHOMEDE_"
 
@@ -29,7 +22,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	Credentials        map[string]string
 	PropagationTimeout time.Duration
@@ -38,110 +30,36 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 20*time.Minute),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		SequenceInterval:   env.GetOrDefaultSecond(EnvSequenceInterval, 2*time.Minute),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *internal.Client
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for dnsHome.de.
-// Credentials must be passed in the environment variable: DNSHOMEDE_CREDENTIALS.
-func NewDNSProvider() (*DNSProvider, error) {
-	config := NewDefaultConfig()
-
-	values, err := env.Get(EnvCredentials)
-	if err != nil {
-		return nil, fmt.Errorf("dnshomede: %w", err)
-	}
-
-	credentials, err := env.ParsePairs(values[EnvCredentials])
-	if err != nil {
-		return nil, fmt.Errorf("dnshomede: credentials: %w", err)
-	}
-
-	config.Credentials = credentials
-
-	return NewDNSProviderConfig(config)
-}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("dnshomede: the configuration of the DNS provider is nil")
-	}
-
-	if len(config.Credentials) == 0 {
-		return nil, errors.New("dnshomede: missing credentials")
-	}
-
-	for domain, password := range config.Credentials {
-		if domain == "" {
-			return nil, fmt.Errorf(`dnshomede: missing domain: "%s:%s"`, domain, password)
-		}
-
-		if password == "" {
-			return nil, fmt.Errorf(`dnshomede: missing password: "%s:%s"`, domain, password)
-		}
-	}
-
-	client := internal.NewClient(config.Credentials)
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	return &DNSProvider{config: config, client: client}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Present updates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, _, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	zone := dns01.UnFqdn(info.EffectiveDomain())
-
-	err := d.client.Add(ctx, zone, info.Value)
-	if err != nil {
-		return fmt.Errorf("dnshomede: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp updates the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, _, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	zone := dns01.UnFqdn(info.EffectiveDomain())
-
-	err := d.client.Remove(ctx, zone, info.Value)
-	if err != nil {
-		return fmt.Errorf("dnshomede: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Sequential All DNS challenges for this provider will be resolved sequentially.
-// Returns the interval between each iteration.
 func (d *DNSProvider) Sequential() time.Duration {
-	return d.config.SequenceInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration)
 }

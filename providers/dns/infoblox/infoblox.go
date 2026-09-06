@@ -1,22 +1,14 @@
-// Package infoblox implements a DNS provider for solving the DNS-01 challenge using on prem infoblox DNS.
 package infoblox
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/internal/useragent"
-	"github.com/go-acme/lego/v5/platform/env"
 	infoblox "github.com/infobloxopen/infoblox-go-client/v2"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "INFOBLOX_"
 
@@ -39,27 +31,21 @@ const defaultPoolConnections = 10
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
-	// Host is the URL of the grid manager.
 	Host string
-	// Port is the Port for the grid manager.
+
 	Port string
 
-	// Username the user for accessing API.
 	Username string
-	// Password the password for accessing API.
+
 	Password string
 
-	// DNSView is the dns view to put new records and search from.
 	DNSView string
-	// WapiVersion is the version of web api used.
+
 	WapiVersion string
 
-	// SSLVerify is whether or not to verify the ssl of the server being hit.
 	SSLVerify bool
 
-	// CACertificate is the path to the CA certificate (PEM encoded).
 	CACertificate string
 
 	PropagationTimeout time.Duration
@@ -68,23 +54,8 @@ type Config struct {
 	HTTPTimeout        int
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		DNSView:       env.GetOrDefaultString(EnvDNSView, "External"),
-		WapiVersion:   env.GetOrDefaultString(EnvWApiVersion, "2.11"),
-		Port:          env.GetOrDefaultString(EnvPort, "443"),
-		SSLVerify:     env.GetOrDefaultBool(EnvSSLVerify, true),
-		CACertificate: env.GetOrDefaultString(EnvCACertificate, ""),
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPTimeout:        env.GetOrDefaultInt(EnvHTTPTimeout, 30),
-	}
-}
-
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config          *Config
 	transportConfig infoblox.TransportConfig
@@ -95,124 +66,24 @@ type DNSProvider struct {
 	recordRefsMu sync.Mutex
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for Infoblox.
-// Credentials must be passed in the environment variables:
-// INFOBLOX_USERNAME, INFOBLOX_PASSWORD
-// INFOBLOX_HOST, INFOBLOX_PORT
-// INFOBLOX_DNS_VIEW, INFOBLOX_WAPI_VERSION
-// INFOBLOX_SSL_VERIFY.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvHost, EnvUsername, EnvPassword)
-	if err != nil {
-		return nil, fmt.Errorf("infoblox: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.Host = values[EnvHost]
-	config.Username = values[EnvUsername]
-	config.Password = values[EnvPassword]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for HyperOne.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("infoblox: the configuration of the DNS provider is nil")
-	}
-
-	if config.Host == "" {
-		return nil, errors.New("infoblox: missing host")
-	}
-
-	if config.Username == "" || config.Password == "" {
-		return nil, errors.New("infoblox: missing credentials")
-	}
-
-	var sslVerify string
-	if config.CACertificate != "" {
-		sslVerify = config.CACertificate
-	} else {
-		sslVerify = strconv.FormatBool(config.SSLVerify)
-	}
-
-	return &DNSProvider{
-		config:          config,
-		transportConfig: infoblox.NewTransportConfig(sslVerify, config.HTTPTimeout, defaultPoolConnections),
-		ibConfig: infoblox.HostConfig{
-			Host:    config.Host,
-			Version: config.WapiVersion,
-			Port:    config.Port,
-		},
-		ibAuth: infoblox.AuthConfig{
-			Username: config.Username,
-			Password: config.Password,
-		},
-		recordRefs: make(map[string]string),
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	connector, err := infoblox.NewConnector(d.ibConfig, d.ibAuth, d.transportConfig, &infoblox.WapiRequestBuilder{}, &infoblox.WapiHttpRequestor{})
-	if err != nil {
-		return fmt.Errorf("infoblox: %w", err)
-	}
-
-	defer func() { _ = connector.Logout() }()
-
-	objectManager := infoblox.NewObjectManager(connector, useragent.Get(), "")
-
-	record, err := objectManager.CreateTXTRecord(d.config.DNSView, dns01.UnFqdn(info.EffectiveFQDN), info.Value, uint32(d.config.TTL), true, "lego", nil)
-	if err != nil {
-		return fmt.Errorf("infoblox: could not create TXT record for %s: %w", domain, err)
-	}
-
-	d.recordRefsMu.Lock()
-	d.recordRefs[token] = record.Ref
-	d.recordRefsMu.Unlock()
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	connector, err := infoblox.NewConnector(d.ibConfig, d.ibAuth, d.transportConfig, &infoblox.WapiRequestBuilder{}, &infoblox.WapiHttpRequestor{})
-	if err != nil {
-		return fmt.Errorf("infoblox: %w", err)
-	}
-
-	defer func() { _ = connector.Logout() }()
-
-	objectManager := infoblox.NewObjectManager(connector, useragent.Get(), "")
-
-	// gets the record's unique ref from when we created it
-	d.recordRefsMu.Lock()
-	recordRef, ok := d.recordRefs[token]
-	d.recordRefsMu.Unlock()
-
-	if !ok {
-		return fmt.Errorf("infoblox: unknown record ID for '%s' '%s'", info.EffectiveFQDN, token)
-	}
-
-	_, err = objectManager.DeleteTXTRecord(recordRef)
-	if err != nil {
-		return fmt.Errorf("infoblox: could not delete TXT record for %s: %w", domain, err)
-	}
-
-	// Delete record ref from map
-	d.recordRefsMu.Lock()
-	delete(d.recordRefs, token)
-	d.recordRefsMu.Unlock()
-
+	_ = "STUB: not implemented"
 	return nil
 }

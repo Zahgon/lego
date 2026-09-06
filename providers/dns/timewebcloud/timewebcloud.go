@@ -1,22 +1,15 @@
-// Package timewebcloud implements a DNS provider for solving the DNS-01 challenge using Timeweb Cloud.
 package timewebcloud
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 	"github.com/go-acme/lego/v5/providers/dns/timewebcloud/internal"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "TIMEWEBCLOUD_"
 
@@ -29,7 +22,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	AuthToken string
 
@@ -38,18 +30,8 @@ type Config struct {
 	PollingInterval    time.Duration
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *internal.Client
@@ -58,100 +40,24 @@ type DNSProvider struct {
 	recordIDsMu sync.Mutex
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for Timeweb Cloud.
-// API token must be passed in the environment variable TIMEWEBCLOUD_TOKEN.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvAuthToken)
-	if err != nil {
-		return nil, fmt.Errorf("timewebcloud: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.AuthToken = values[EnvAuthToken]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig returns a DNSProvider instance configured for Timeweb Cloud.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("timewebcloud: the configuration of the DNS provider is nil")
-	}
-
-	if config.AuthToken == "" {
-		return nil, errors.New("timewebcloud: authentication token is missing")
-	}
-
-	client := internal.NewClient(
-		clientdebug.Wrap(
-			internal.OAuthStaticAccessToken(config.HTTPClient, config.AuthToken),
-		),
-	)
-
-	return &DNSProvider{
-		config:    config,
-		client:    client,
-		recordIDs: make(map[string]int),
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	_, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("timewebcloud: could not find zone for domain %q: %w", domain, err)
-	}
-
-	record := internal.DNSRecordRequest{
-		Type:  "TXT",
-		Value: info.Value,
-	}
-
-	response, err := d.client.CreateRecord(ctx, info.EffectiveFQDN, record)
-	if err != nil {
-		return fmt.Errorf("timewebcloud: create record: %w", err)
-	}
-
-	d.recordIDsMu.Lock()
-	d.recordIDs[token] = response.ID
-	d.recordIDsMu.Unlock()
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	_, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("timewebcloud: could not find zone for domain %q: %w", domain, err)
-	}
-
-	d.recordIDsMu.Lock()
-	recordID, ok := d.recordIDs[token]
-	d.recordIDsMu.Unlock()
-
-	if !ok {
-		return fmt.Errorf("timewebcloud: unknown record ID for '%s'", info.EffectiveFQDN)
-	}
-
-	err = d.client.DeleteRecord(ctx, info.EffectiveFQDN, recordID)
-	if err != nil {
-		return fmt.Errorf("timewebcloud: delete record: %w", err)
-	}
-
-	d.recordIDsMu.Lock()
-	delete(d.recordIDs, token)
-	d.recordIDsMu.Unlock()
-
+	_ = "STUB: not implemented"
 	return nil
 }

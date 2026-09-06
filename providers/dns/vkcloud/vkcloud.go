@@ -1,20 +1,13 @@
-// Package vkcloud implements a DNS provider for solving the DNS-01 challenge using VK Cloud.
 package vkcloud
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/vkcloud/internal"
-	"github.com/gophercloud/gophercloud"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "VK_CLOUD_"
 
@@ -41,7 +34,6 @@ const defaultDomainName = "users"
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	ProjectID string
 	Username  string
@@ -57,189 +49,41 @@ type Config struct {
 	TTL                int
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		TTL:                env.GetOrDefaultInt(EnvTTL, 60),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	client *internal.Client
 	config *Config
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for VK Cloud.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvProjectID, EnvUsername, EnvPassword)
-	if err != nil {
-		return nil, fmt.Errorf("vkcloud: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.ProjectID = values[EnvProjectID]
-	config.Username = values[EnvUsername]
-	config.Password = values[EnvPassword]
-	config.IdentityEndpoint = env.GetOrDefaultString(EnvIdentityEndpoint, defaultIdentityEndpoint)
-	config.DomainName = env.GetOrDefaultString(EnvDomainName, defaultDomainName)
-	config.DNSEndpoint = env.GetOrDefaultString(EnvDNSEndpoint, defaultDNSEndpoint)
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for VK Cloud.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("vkcloud: the configuration of the DNS provider is nil")
-	}
-
-	if config.DNSEndpoint == "" {
-		return nil, errors.New("vkcloud: DNS endpoint is missing in config")
-	}
-
-	authOpts := gophercloud.AuthOptions{
-		IdentityEndpoint: config.IdentityEndpoint,
-		Username:         config.Username,
-		Password:         config.Password,
-		DomainName:       config.DomainName,
-		TenantID:         config.ProjectID,
-	}
-
-	client, err := internal.NewClient(config.DNSEndpoint, authOpts)
-	if err != nil {
-		return nil, fmt.Errorf("vkcloud: unable to build VK Cloud client: %w", err)
-	}
-
-	return &DNSProvider{
-		client: client,
-		config: config,
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, _, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("vkcloud: could not find zone for domain %q: %w", domain, err)
-	}
-
-	authZone = dns01.UnFqdn(authZone)
-
-	zones, err := d.client.ListZones()
-	if err != nil {
-		return fmt.Errorf("vkcloud: unable to fetch dns zones: %w", err)
-	}
-
-	var zoneUUID string
-
-	for _, zone := range zones {
-		if zone.Zone == authZone {
-			zoneUUID = zone.UUID
-		}
-	}
-
-	if zoneUUID == "" {
-		return fmt.Errorf("vkcloud: cant find dns zone %s in VK Cloud", authZone)
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(info.EffectiveFQDN, authZone)
-	if err != nil {
-		return fmt.Errorf("vkcloud: %w", err)
-	}
-
-	err = d.upsertTXTRecord(zoneUUID, subDomain, info.Value)
-	if err != nil {
-		return fmt.Errorf("vkcloud: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, _, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("vkcloud: could not find zone for domain %q: %w", domain, err)
-	}
-
-	authZone = dns01.UnFqdn(authZone)
-
-	zones, err := d.client.ListZones()
-	if err != nil {
-		return fmt.Errorf("vkcloud: unable to fetch dns zones: %w", err)
-	}
-
-	var zoneUUID string
-
-	for _, zone := range zones {
-		if zone.Zone == authZone {
-			zoneUUID = zone.UUID
-		}
-	}
-
-	if zoneUUID == "" {
-		return nil
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(info.EffectiveFQDN, authZone)
-	if err != nil {
-		return fmt.Errorf("vkcloud: %w", err)
-	}
-
-	err = d.removeTXTRecord(zoneUUID, subDomain, info.Value)
-	if err != nil {
-		return fmt.Errorf("vkcloud: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
 func (d *DNSProvider) upsertTXTRecord(zoneUUID, name, value string) error {
-	records, err := d.client.ListTXTRecords(zoneUUID)
-	if err != nil {
-		return err
-	}
-
-	for _, record := range records {
-		if record.Name == name && record.Content == value {
-			// The DNSRecord is already present, nothing to do
-			return nil
-		}
-	}
-
-	return d.client.CreateTXTRecord(zoneUUID, &internal.DNSTXTRecord{
-		Name:    name,
-		Content: value,
-		TTL:     d.config.TTL,
-	})
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (d *DNSProvider) removeTXTRecord(zoneUUID, name, value string) error {
-	records, err := d.client.ListTXTRecords(zoneUUID)
-	if err != nil {
-		return err
-	}
-
-	name = dns01.UnFqdn(name)
-	for _, record := range records {
-		if record.Name == name && record.Content == value {
-			return d.client.DeleteTXTRecord(zoneUUID, record.UUID)
-		}
-	}
-
-	// The DNSRecord is not present, nothing to do
+	_ = "STUB: not implemented"
 	return nil
 }

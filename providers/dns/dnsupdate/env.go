@@ -1,11 +1,7 @@
 package dnsupdate
 
 import (
-	"strconv"
-	"strings"
 	"time"
-
-	"github.com/go-acme/lego/v5/platform/env"
 )
 
 const (
@@ -13,50 +9,22 @@ const (
 	altEnvRFC3645SubNamespace = "RFC3645_"
 )
 
-func altEnvNames(v string) []string {
-	if strings.HasPrefix(v, envTSIGGSS) {
-		return []string{
-			strings.ReplaceAll(v,
-				envTSIGGSS,
-				envNamespace+altEnvRFC3645SubNamespace,
-			),
-			strings.ReplaceAll(v,
-				envTSIGGSS,
-				altEnvRFC2136Namespace+envSubTSIGGSS,
-			),
-		}
-	}
+func altEnvNames(v string) []string { _ = "STUB: not implemented"; return nil }
 
-	return []string{
-		strings.ReplaceAll(v, envNamespace, altEnvRFC2136Namespace),
-	}
-}
+func getEnvString(name string) string { _ = "STUB: not implemented"; return "" }
 
-func getEnvString(name string) string {
-	return getOrDefaultString(name, "")
-}
+func getEnvStringSlice(name string) []string { _ = "STUB: not implemented"; return nil }
 
-func getEnvStringSlice(name string) []string {
-	v := getEnvString(name)
-	if v == "" {
-		return nil
-	}
-
-	return strings.Split(v, ",")
-}
-
-func getOrDefaultString(name, defaultValue string) string {
-	return getOneWithFallback(name, defaultValue, env.ParseString)
-}
+func getOrDefaultString(name, defaultValue string) string { _ = "STUB: not implemented"; return "" }
 
 func getOrDefaultSecond(name string, defaultValue time.Duration) time.Duration {
-	return getOneWithFallback(name, defaultValue, env.ParseSecond)
+	_ = "STUB: not implemented"
+	return *new(time.Duration)
 }
 
-func getOrDefaultInt(name string, defaultValue int) int {
-	return getOneWithFallback(name, defaultValue, strconv.Atoi)
-}
+func getOrDefaultInt(name string, defaultValue int) int { _ = "STUB: not implemented"; return 0 }
 
 func getOneWithFallback[T any](main string, defaultValue T, fn func(string) (T, error)) T {
-	return env.GetOneWithFallback(main, defaultValue, fn, altEnvNames(main)...)
+	_ = "STUB: not implemented"
+	return *new(T)
 }

@@ -1,22 +1,13 @@
-// Package selectel implements a DNS provider for solving the DNS-01 challenge using Selectel Domains API.
-// Selectel Domain API reference: https://kb.selectel.com/23136054.html
-// Token: https://my.selectel.ru/profile/apikeys
 package selectel
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/internal/selectel"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "SELECTEL_"
 
@@ -32,76 +23,32 @@ const defaultBaseURL = "https://api.selectel.ru/domains/v1"
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config = selectel.Config
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		TTL:                env.GetOrDefaultInt(EnvTTL, selectel.MinTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 120*time.Second),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	prv challenge.ProviderTimeout
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for Selectel Domains API.
-// API token must be passed in the environment variable SELECTEL_API_TOKEN.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvAPIToken)
-	if err != nil {
-		return nil, fmt.Errorf("selectel: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.Token = values[EnvAPIToken]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for selectel.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("selectel: the configuration of the DNS provider is nil")
-	}
-
-	provider, err := selectel.NewDNSProviderConfig(config, defaultBaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("selectel: %w", err)
-	}
-
-	return &DNSProvider{prv: provider}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Present creates a TXT record using the specified parameters.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	err := d.prv.Present(ctx, domain, token, keyAuth)
-	if err != nil {
-		return fmt.Errorf("selectel: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	err := d.prv.CleanUp(ctx, domain, token, keyAuth)
-	if err != nil {
-		return fmt.Errorf("selectel: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.prv.Timeout()
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }

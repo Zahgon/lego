@@ -13,47 +13,30 @@ func init() {
 	defaultClient.Store(NewClient(nil))
 }
 
-func DefaultClient() *Client { return defaultClient.Load() }
+func DefaultClient() *Client { _ = "STUB: not implemented"; return nil }
 
-func SetDefaultClient(c *Client) {
-	defaultClient.Store(c)
-}
+func SetDefaultClient(c *Client) { _ = "STUB: not implemented"; return }
 
 type Options = internal.Options
 
-func NewOptions() *Options {
-	return internal.NewOptions()
-}
+func NewOptions() *Options { _ = "STUB: not implemented"; return nil }
 
 type Client struct {
 	core *internal.Client
 
-	// authoritativeNSPort used by authoritative NS.
-	// For testing purposes only.
 	authoritativeNSPort string
 }
 
-func NewClient(opts *Options) *Client {
-	return &Client{
-		core: internal.NewClient(opts),
+func NewClient(opts *Options) *Client { _ = "STUB: not implemented"; return nil }
 
-		authoritativeNSPort: "53",
-	}
-}
-
-// FindZoneByFqdn determines the zone apex for the given fqdn
-// by recursing up the domain labels until the nameserver returns a SOA record in the answer section.
 func (c *Client) FindZoneByFqdn(ctx context.Context, fqdn string) (string, error) {
-	return c.core.FindZoneByFqdn(ctx, fqdn)
+	_ = "STUB: not implemented"
+	return "", nil
 }
 
-// FindZoneByFqdnCustom determines the zone apex for the given fqdn
-// by recursing up the domain labels until the nameserver returns a SOA record in the answer section.
 func (c *Client) FindZoneByFqdnCustom(ctx context.Context, fqdn string, nameservers []string) (string, error) {
-	return c.core.FindZoneByFqdnCustom(ctx, fqdn, nameservers)
+	_ = "STUB: not implemented"
+	return "", nil
 }
 
-// ClearFqdnCache clears the cache of fqdn to zone mappings. Primarily used in testing.
-func (c *Client) ClearFqdnCache() {
-	c.core.ClearFqdnCache()
-}
+func (c *Client) ClearFqdnCache() { _ = "STUB: not implemented"; return }

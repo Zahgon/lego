@@ -1,4 +1,3 @@
-// An application for generating certificates via ACME.
 package main
 
 import (

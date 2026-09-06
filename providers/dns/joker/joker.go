@@ -1,17 +1,12 @@
-// Package joker implements a DNS provider for solving the DNS-01 challenge using joker.com.
 package joker
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "JOKER_"
 
@@ -32,7 +27,6 @@ const (
 	modeSVC   = "SVC"
 )
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	APIKey             string
 	Username           string
@@ -45,35 +39,14 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		APIMode:            env.GetOrDefaultString(EnvMode, modeDMAPI),
-		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 2*time.Minute),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		SequenceInterval:   env.GetOrDefaultSecond(EnvSequenceInterval, dns01.DefaultPropagationTimeout),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 60*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// NewDNSProvider returns a DNSProvider instance configured for Joker.
-// Credentials must be passed in the environment variable JOKER_API_KEY.
 func NewDNSProvider() (challenge.ProviderTimeout, error) {
-	if os.Getenv(EnvMode) == modeSVC {
-		return newSvcProvider()
-	}
-
-	return newDmapiProvider()
+	_ = "STUB: not implemented"
+	return *new(challenge.ProviderTimeout), nil
 }
 
-// NewDNSProviderConfig return a DNSProvider instance configured for Joker.
 func NewDNSProviderConfig(config *Config) (challenge.ProviderTimeout, error) {
-	if config.APIMode == modeSVC {
-		return newSvcProviderConfig(config)
-	}
-
-	return newDmapiProviderConfig(config)
+	_ = "STUB: not implemented"
+	return *new(challenge.ProviderTimeout), nil
 }

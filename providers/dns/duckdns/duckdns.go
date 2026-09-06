@@ -1,22 +1,14 @@
-// Package duckdns implements a DNS provider for solving the DNS-01 challenge using DuckDNS.
-// See http://www.duckdns.org/spec.jsp for more info on updating TXT records.
 package duckdns
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/duckdns/internal"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "DUCKDNS_"
 
@@ -30,7 +22,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	Token              string
 	PropagationTimeout time.Duration
@@ -39,81 +30,36 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		SequenceInterval:   env.GetOrDefaultSecond(EnvSequenceInterval, dns01.DefaultPropagationTimeout),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 30*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *internal.Client
 }
 
-// NewDNSProvider returns a new DNS provider using
-// environment variable DUCKDNS_TOKEN for adding and removing the DNS record.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvToken)
-	if err != nil {
-		return nil, fmt.Errorf("duckdns: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.Token = values[EnvToken]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for DuckDNS.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("duckdns: the configuration of the DNS provider is nil")
-	}
-
-	if config.Token == "" {
-		return nil, errors.New("duckdns: credentials missing")
-	}
-
-	client := internal.NewClient(config.Token)
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	return &DNSProvider{config: config, client: client}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	return d.client.AddTXTRecord(ctx, dns01.UnFqdn(info.EffectiveFQDN), info.Value)
+	_ = "STUB: not implemented"
+	return nil
 }
 
-// CleanUp clears DuckDNS TXT record.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	return d.client.RemoveTXTRecord(ctx, dns01.UnFqdn(info.EffectiveFQDN))
+	_ = "STUB: not implemented"
+	return nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Sequential All DNS challenges for this provider will be resolved sequentially.
-// Returns the interval between each iteration.
 func (d *DNSProvider) Sequential() time.Duration {
-	return d.config.SequenceInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration)
 }

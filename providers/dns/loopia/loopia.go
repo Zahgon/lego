@@ -1,22 +1,15 @@
-// Package loopia implements a DNS provider for solving the DNS-01 challenge using loopia DNS.
 package loopia
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 	"github.com/go-acme/lego/v5/providers/dns/loopia/internal"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "LOOPIA_"
 
@@ -41,7 +34,6 @@ type dnsClient interface {
 	RemoveSubdomain(ctx context.Context, domain, subdomain string) error
 }
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	BaseURL            string
 	APIUser            string
@@ -52,19 +44,8 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		TTL:                env.GetOrDefaultInt(EnvTTL, minTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, 40*time.Minute),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPropagationTimeout),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, time.Minute),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client dnsClient
@@ -72,144 +53,32 @@ type DNSProvider struct {
 	inProgressInfo map[string]int
 	inProgressMu   sync.Mutex
 
-	// only for testing purpose.
 	findZoneByFqdn func(ctx context.Context, fqdn string) (string, error)
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for Loopia.
-// Credentials must be passed in the environment variables:
-// LOOPIA_API_USER, LOOPIA_API_PASSWORD.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvAPIUser, EnvAPIPassword)
-	if err != nil {
-		return nil, fmt.Errorf("loopia: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.APIUser = values[EnvAPIUser]
-	config.APIPassword = values[EnvAPIPassword]
-	config.BaseURL = env.GetOrDefaultString(EnvAPIURL, internal.DefaultBaseURL)
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for Loopia.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("loopia: the configuration of the DNS provider is nil")
-	}
-
-	if config.APIUser == "" || config.APIPassword == "" {
-		return nil, errors.New("loopia: credentials missing")
-	}
-
-	// Min value for TTL is 300
-	if config.TTL < 300 {
-		config.TTL = 300
-	}
-
-	client := internal.NewClient(config.APIUser, config.APIPassword)
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	if config.BaseURL != "" {
-		client.BaseURL = config.BaseURL
-	}
-
-	return &DNSProvider{
-		config:         config,
-		client:         client,
-		findZoneByFqdn: dns01.DefaultClient().FindZoneByFqdn,
-		inProgressInfo: make(map[string]int),
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record using the specified parameters.
 func (d *DNSProvider) Present(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	subDomain, authZone, err := d.splitDomain(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("loopia: %w", err)
-	}
-
-	err = d.client.AddTXTRecord(ctx, authZone, subDomain, d.config.TTL, info.Value)
-	if err != nil {
-		return fmt.Errorf("loopia: failed to add TXT record: %w", err)
-	}
-
-	txtRecords, err := d.client.GetTXTRecords(ctx, authZone, subDomain)
-	if err != nil {
-		return fmt.Errorf("loopia: failed to get TXT records: %w", err)
-	}
-
-	d.inProgressMu.Lock()
-	defer d.inProgressMu.Unlock()
-
-	for _, r := range txtRecords {
-		if r.Rdata == info.Value {
-			d.inProgressInfo[token] = r.RecordID
-			return nil
-		}
-	}
-
-	return errors.New("loopia: failed to find the stored TXT record")
+	_ = "STUB: not implemented"
+	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	subDomain, authZone, err := d.splitDomain(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("loopia: %w", err)
-	}
-
-	d.inProgressMu.Lock()
-	defer d.inProgressMu.Unlock()
-
-	err = d.client.RemoveTXTRecord(ctx, authZone, subDomain, d.inProgressInfo[token])
-	if err != nil {
-		return fmt.Errorf("loopia: failed to remove TXT record: %w", err)
-	}
-
-	records, err := d.client.GetTXTRecords(ctx, authZone, subDomain)
-	if err != nil {
-		return fmt.Errorf("loopia: failed to get TXT records: %w", err)
-	}
-
-	if len(records) > 0 {
-		return nil
-	}
-
-	err = d.client.RemoveSubdomain(ctx, authZone, subDomain)
-	if err != nil {
-		return fmt.Errorf("loopia: failed to remove subdomain: %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (d *DNSProvider) splitDomain(ctx context.Context, fqdn string) (string, string, error) {
-	authZone, err := d.findZoneByFqdn(ctx, fqdn)
-	if err != nil {
-		return "", "", fmt.Errorf("could not find zone: %w", err)
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(fqdn, authZone)
-	if err != nil {
-		return "", "", err
-	}
-
-	return subDomain, dns01.UnFqdn(authZone), nil
+	_ = "STUB: not implemented"
+	return "", "", nil
 }

@@ -1,21 +1,14 @@
-// Package abion implements a DNS provider for solving the DNS-01 challenge using Abion.
 package abion
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-acme/lego/v5/challenge"
-	"github.com/go-acme/lego/v5/challenge/dns01"
-	"github.com/go-acme/lego/v5/platform/env"
 	"github.com/go-acme/lego/v5/providers/dns/abion/internal"
-	"github.com/go-acme/lego/v5/providers/dns/internal/clientdebug"
 )
 
-// Environment variables names.
 const (
 	envNamespace = "ABION_"
 
@@ -29,7 +22,6 @@ const (
 
 var _ challenge.ProviderTimeout = (*DNSProvider)(nil)
 
-// Config is used to configure the creation of the DNSProvider.
 type Config struct {
 	APIKey             string
 	PropagationTimeout time.Duration
@@ -38,175 +30,31 @@ type Config struct {
 	HTTPClient         *http.Client
 }
 
-// NewDefaultConfig returns a default configuration for the DNSProvider.
-func NewDefaultConfig() *Config {
-	return &Config{
-		TTL:                env.GetOrDefaultInt(EnvTTL, dns01.DefaultTTL),
-		PropagationTimeout: env.GetOrDefaultSecond(EnvPropagationTimeout, dns01.DefaultPropagationTimeout),
-		PollingInterval:    env.GetOrDefaultSecond(EnvPollingInterval, dns01.DefaultPollingInterval),
-		HTTPClient: &http.Client{
-			Timeout: env.GetOrDefaultSecond(EnvHTTPTimeout, 10*time.Second),
-		},
-	}
-}
+func NewDefaultConfig() *Config { _ = "STUB: not implemented"; return nil }
 
-// DNSProvider implements the challenge.Provider interface.
 type DNSProvider struct {
 	config *Config
 	client *internal.Client
 }
 
-// NewDNSProvider returns a DNSProvider instance configured for Abion.
-// Credentials must be passed in the environment variable: ABION_API_KEY.
-func NewDNSProvider() (*DNSProvider, error) {
-	values, err := env.Get(EnvAPIKey)
-	if err != nil {
-		return nil, fmt.Errorf("abion: %w", err)
-	}
+func NewDNSProvider() (*DNSProvider, error) { _ = "STUB: not implemented"; return nil, nil }
 
-	config := NewDefaultConfig()
-	config.APIKey = values[EnvAPIKey]
-
-	return NewDNSProviderConfig(config)
-}
-
-// NewDNSProviderConfig return a DNSProvider instance configured for Abion.
 func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
-	if config == nil {
-		return nil, errors.New("abion: the configuration of the DNS provider is nil")
-	}
-
-	if config.APIKey == "" {
-		return nil, errors.New("abion: credentials missing")
-	}
-
-	client := internal.NewClient(config.APIKey)
-
-	if config.HTTPClient != nil {
-		client.HTTPClient = config.HTTPClient
-	}
-
-	client.HTTPClient = clientdebug.Wrap(client.HTTPClient)
-
-	return &DNSProvider{
-		config: config,
-		client: client,
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-// Timeout returns the timeout and interval to use when checking for DNS propagation.
-// Adjusting here to cope with spikes in propagation times.
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return d.config.PropagationTimeout, d.config.PollingInterval
+	_ = "STUB: not implemented"
+	return *new(time.Duration), *new(time.Duration)
 }
 
-// Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(ctx context.Context, domain, _, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("abion: could not find zone for domain %q: %w", domain, err)
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(info.EffectiveFQDN, authZone)
-	if err != nil {
-		return fmt.Errorf("abion: %w", err)
-	}
-
-	zones, err := d.client.GetZone(ctx, dns01.UnFqdn(authZone))
-	if err != nil {
-		return fmt.Errorf("abion: get zone %w", err)
-	}
-
-	var data []internal.Record
-
-	if sub, ok := zones.Data.Attributes.Records[subDomain]; ok {
-		if records, exist := sub["TXT"]; exist {
-			data = append(data, records...)
-		}
-	}
-
-	data = append(data, internal.Record{
-		TTL:      d.config.TTL,
-		Data:     info.Value,
-		Comments: "lego",
-	})
-
-	patch := internal.ZoneRequest{
-		Data: internal.Zone{
-			Type: "zone",
-			ID:   dns01.UnFqdn(authZone),
-			Attributes: internal.Attributes{
-				Records: map[string]map[string][]internal.Record{
-					subDomain: {"TXT": data},
-				},
-			},
-		},
-	}
-
-	_, err = d.client.UpdateZone(ctx, dns01.UnFqdn(authZone), patch)
-	if err != nil {
-		return fmt.Errorf("abion: update zone %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
 
-// CleanUp removes the TXT record matching the specified parameters.
 func (d *DNSProvider) CleanUp(ctx context.Context, domain, token, keyAuth string) error {
-	info := dns01.GetChallengeInfo(ctx, domain, keyAuth)
-
-	authZone, err := dns01.DefaultClient().FindZoneByFqdn(ctx, info.EffectiveFQDN)
-	if err != nil {
-		return fmt.Errorf("abion: could not find zone for domain %q: %w", domain, err)
-	}
-
-	subDomain, err := dns01.ExtractSubDomain(info.EffectiveFQDN, authZone)
-	if err != nil {
-		return fmt.Errorf("abion: %w", err)
-	}
-
-	zones, err := d.client.GetZone(ctx, dns01.UnFqdn(authZone))
-	if err != nil {
-		return fmt.Errorf("abion: get zone %w", err)
-	}
-
-	var data []internal.Record
-
-	if sub, ok := zones.Data.Attributes.Records[subDomain]; ok {
-		if records, exist := sub["TXT"]; exist {
-			for _, record := range records {
-				if record.Data != info.Value {
-					data = append(data, record)
-				}
-			}
-		}
-	}
-
-	payload := map[string][]internal.Record{}
-	if len(data) == 0 {
-		payload["TXT"] = nil
-	} else {
-		payload["TXT"] = data
-	}
-
-	patch := internal.ZoneRequest{
-		Data: internal.Zone{
-			Type: "zone",
-			ID:   dns01.UnFqdn(authZone),
-			Attributes: internal.Attributes{
-				Records: map[string]map[string][]internal.Record{
-					subDomain: payload,
-				},
-			},
-		},
-	}
-
-	_, err = d.client.UpdateZone(ctx, dns01.UnFqdn(authZone), patch)
-	if err != nil {
-		return fmt.Errorf("abion: update zone %w", err)
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
